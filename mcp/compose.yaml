@@ -1,0 +1,93 @@
+name: chatgpt-mcp
+services:
+  backend:
+    build:
+      context: ..
+      dockerfile: mcp/backend.Dockerfile
+    image: local/chatgpt-backend:a63a90c-mcp1
+    restart: unless-stopped
+    read_only: true
+    environment:
+      ENABLE_GATEWAY: "true"
+      AUTO_SEED: "true"
+      HISTORY_DISABLED: "false"
+      RETRY_TIMES: "0"
+      SCHEDULED_REFRESH: "false"
+      PYTHONDONTWRITEBYTECODE: "1"
+    tmpfs:
+      - /app/data:rw,size=16777216,uid=10001,gid=10001,mode=0700
+      - /tmp:rw,size=67108864,uid=10001,gid=10001,mode=0700
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5005/openapi.json', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    mem_limit: 256m
+    pids_limit: 96
+    logging:
+      driver: json-file
+      options: { max-size: "2m", max-file: "2" }
+    networks: [chatgpt]
+  mcp:
+    build: ./server
+    image: local/chatgpt-mcp:2
+    restart: unless-stopped
+    read_only: true
+    init: true
+    environment:
+      CHAT2API_URL: http://backend:5005
+      AUTH_DIR: /secrets
+      STATE_DIR: /state
+      FASTMCP_HOME: /state/fastmcp
+      MCP_SOCKET: /run/chatgpt-mcp/server.sock
+      PUBLIC_MCP_URL: ${PUBLIC_MCP_URL:?Set PUBLIC_MCP_URL in .env}
+      OIDC_ISSUER: ${OIDC_ISSUER:?Set OIDC_ISSUER in .env}
+      OIDC_CLIENT_ID: ${OIDC_CLIENT_ID:-chatgpt-mcp}
+      OIDC_JWKS_URL: http://authelia:9091/auth/jwks.json
+    ports: ["127.0.0.1:18790:8000"]
+    volumes:
+      - ./secrets:/secrets
+      - ./state:/state
+      - ./run:/run/chatgpt-mcp
+    tmpfs:
+      - /tmp:rw,size=16777216,uid=10001,gid=10001,mode=0700
+    depends_on:
+      backend: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket; s=socket.create_connection(('127.0.0.1',8000),3); s.close()"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    mem_limit: 256m
+    pids_limit: 96
+    logging:
+      driver: json-file
+      options: { max-size: "2m", max-file: "2" }
+    networks: [chatgpt]
+  authelia:
+    image: authelia/authelia:4.39.28
+    user: "10001:10001"
+    restart: unless-stopped
+    read_only: true
+    ports: ["127.0.0.1:19091:9091"]
+    volumes:
+      - ./auth-config:/config:ro
+      - ./auth-data:/data
+    tmpfs:
+      - /tmp:rw,size=16777216,uid=10001,gid=10001,mode=0700
+    environment:
+      GOMEMLIMIT: 256MiB
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-T", "5", "--spider", "http://127.0.0.1:9091/auth/api/health"]
+      interval: 30s
+      timeout: 6s
+      retries: 3
+    mem_limit: 384m
+    pids_limit: 64
+    logging:
+      driver: json-file
+      options: { max-size: "2m", max-file: "2" }
+    networks: [chatgpt]
+networks:
+  chatgpt:

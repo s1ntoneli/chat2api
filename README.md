@@ -1,3 +1,6 @@
+> This fork adds an authenticated MCP server for existing ChatGPT conversations.
+> See [MCP setup and changes](mcp/README.md).
+
 # CHAT2API
 
 🤖 一个简单的 ChatGPT TO API 代理

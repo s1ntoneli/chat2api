@@ -7,3 +7,14 @@
 /data/
 /.venv/
 /.vscode/
+# MCP runtime and deployment files are not backend image inputs.
+mcp/
+**/__pycache__/
+**/.env
+**/secrets/
+**/state/
+**/auth-config/
+**/auth-data/
+**/private-connection.json
+**/origin-auth.json
+**/*-tokens.json

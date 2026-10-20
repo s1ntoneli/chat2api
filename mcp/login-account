@@ -1,0 +1,5 @@
+#!/bin/sh
+set -eu
+if [ "$(id -u)" != 0 ]; then echo 'Run on the Linux server as root.' >&2; exit 1; fi
+runuser -u chatgpt-login -- /usr/local/libexec/chatgpt-codex-login -c 'cli_auth_credentials_store="file"' login --device-auth
+python3 /opt/chatgpt-mcp/import-login.py

@@ -452,7 +452,7 @@ async def api_messages_to_chat(service, api_messages, upload_by_url=False):
             parts = [content]
             metadata = {}
         chat_message = {
-            "id": f"{uuid.uuid4()}",
+            "id": str(uuid.UUID(api_message["id"])) if api_message.get("id") else str(uuid.uuid4()),
             "author": {"role": role},
             "content": {"content_type": content_type, "parts": parts},
             "metadata": metadata

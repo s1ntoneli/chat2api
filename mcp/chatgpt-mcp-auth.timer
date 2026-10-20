@@ -1,0 +1,10 @@
+[Unit]
+Description=Keep ChatGPT MCP credentials current
+
+[Timer]
+OnBootSec=3min
+OnUnitActiveSec=10min
+Persistent=true
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,22 @@
+__ORIGIN_HOST__ {
+    @cloudflare_origin header X-Origin-Authorization __ORIGIN_AUTH__
+    handle @cloudflare_origin {
+        handle /auth/* {
+            reverse_proxy 127.0.0.1:19091 {
+                header_up Host __PUBLIC_HOST__
+                header_up X-Forwarded-Host __PUBLIC_HOST__
+                header_up X-Forwarded-Proto https
+            }
+        }
+        handle {
+            reverse_proxy 127.0.0.1:18790 {
+                header_up Host __PUBLIC_HOST__
+                header_up X-Forwarded-Host __PUBLIC_HOST__
+                header_up X-Forwarded-Proto https
+            }
+        }
+    }
+    handle {
+        respond "Not found" 404
+    }
+}

@@ -346,6 +346,10 @@ class ChatService:
         return self.chat_request
 
     async def send_conversation(self):
+        from utils.send_stage import send_stage
+        state = send_stage.get()
+        if state is not None:
+            state["started"] = True
         try:
             url = f'{self.base_url}/conversation'
             stream = self.data.get("stream", False)

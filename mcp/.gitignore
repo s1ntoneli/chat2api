@@ -1,0 +1,14 @@
+secrets/
+state/
+auth-config/
+auth-data/
+run/
+run-next/
+state-next/
+bin/
+.wrangler/
+private-connection.json
+origin-auth.json
+*-tokens.json
+*.sqlite*
+__pycache__/

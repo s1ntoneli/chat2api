@@ -74,6 +74,7 @@ headers_reject_list = [
 ]
 
 headers_accept_list = [
+    "chatgpt-account-id",
     "openai-sentinel-chat-requirements-token",
     "openai-sentinel-proof-token",
     "openai-sentinel-turnstile-token",

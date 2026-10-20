@@ -1,0 +1,22 @@
+import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+const source = await readFile(new URL('./index.js', import.meta.url), 'utf8');
+const worker = (await import('data:text/javascript;base64,' + Buffer.from(source).toString('base64'))).default;
+const env = { PUBLIC_HOST: 'mcp.example.com', ORIGIN_URL: 'https://origin.example', ORIGIN_AUTH: 'test-only-secret' };
+assert.equal((await worker.fetch(new Request('https://attacker.example/mcp'), env)).status, 404);
+assert.equal((await worker.fetch(new Request('https://mcp.example.com/mcp'), {...env, ORIGIN_AUTH: ''})).status, 503);
+globalThis.fetch = async (request, options) => {
+  assert.equal(new URL(request.url).origin, env.ORIGIN_URL);
+  assert.equal(new URL(request.url).pathname, '/mcp');
+  assert.equal(request.headers.get('X-Origin-Authorization'), env.ORIGIN_AUTH);
+  assert.equal(request.headers.get('X-Forwarded-Host'), env.PUBLIC_HOST);
+  assert.equal(request.headers.get('Authorization'), 'Bearer client-token');
+  assert.equal(request.redirect, 'manual');
+  assert.equal(options.cache, 'no-store');
+  return new Response('streamed result', {status: 200, headers: {'Set-Cookie':'session=test; Secure; HttpOnly'}});
+};
+const response = await worker.fetch(new Request('https://mcp.example.com/mcp', {headers: {'X-Origin-Authorization':'attacker-value', 'X-Forwarded-Host':'attacker.example', Authorization:'Bearer client-token'}}), env);
+assert.equal(await response.text(), 'streamed result');
+assert.equal(response.headers.get('Cache-Control'), 'no-store');
+assert.equal(response.headers.get('Set-Cookie'), 'session=test; Secure; HttpOnly');
+console.log('Edge host, secret overwrite, bearer forwarding, streaming and no-cache checks passed.');

@@ -1,0 +1,9 @@
+[Unit]
+Description=Check and renew ChatGPT MCP account credentials
+Requires=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/chatgpt-mcp
+ExecStart=/usr/bin/docker compose exec -T mcp python /srv/credentials.py

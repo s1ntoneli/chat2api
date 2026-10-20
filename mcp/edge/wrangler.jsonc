@@ -1,0 +1,27 @@
+{
+  "name": "chatgpt-conversations-mcp",
+  "main": "index.js",
+  "compatibility_date": "2026-10-20",
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  "workers_dev": false,
+  "preview_urls": false,
+  "routes": [
+    {
+      "pattern": "mcp.example.com",
+      "custom_domain": true
+    }
+  ],
+  "vars": {
+    "PUBLIC_HOST": "mcp.example.com",
+    "ORIGIN_URL": "https://origin.example.com"
+  },
+  "observability": {
+    "enabled": true,
+    "logs": {
+      "enabled": true,
+      "invocation_logs": false
+    }
+  }
+}

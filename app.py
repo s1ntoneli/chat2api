@@ -34,6 +34,19 @@ app.add_middleware(
 templates = Jinja2Templates(directory="templates")
 security_scheme = HTTPBearer()
 
+from utils.send_stage import send_stage
+
+@app.middleware("http")
+async def track_send_stage(request, call_next):
+    state = {"started": False}
+    token = send_stage.set(state)
+    try:
+        response = await call_next(request)
+        response.headers["X-ChatGPT-Send-Stage"] = "possibly-sent" if state["started"] else "not-started"
+        return response
+    finally:
+        send_stage.reset(token)
+
 from app import app
 
 import api.chat2api
