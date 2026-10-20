@@ -19,6 +19,23 @@ export CHAT2API_IMAGE="local/chatgpt-backend:git-$revision"
 export MCP_IMAGE="local/chatgpt-mcp:git-$revision"
 docker compose build backend mcp
 docker compose run --rm --no-deps mcp python -m unittest discover -p 'test_*.py'
+# Persist image selections so later compose commands use this deployed revision.
+python3 - <<'PYCONFIG'
+import os
+from pathlib import Path
+path = Path('.env')
+keys = ('CHAT2API_IMAGE', 'MCP_IMAGE')
+lines = path.read_text().splitlines()
+lines = [line for line in lines if not any(line.startswith(key + '=') for key in keys)]
+lines.extend(key + '=' + os.environ[key] for key in keys)
+temp = path.with_name('.env.new')
+fd = os.open(temp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC | os.O_NOFOLLOW, 0o600)
+with os.fdopen(fd, 'w') as stream:
+    stream.write('\n'.join(lines) + '\n')
+    stream.flush()
+    os.fsync(stream.fileno())
+os.replace(temp, path)
+PYCONFIG
 docker compose up -d --wait --wait-timeout 120
 echo "Deployment updated to $revision."
 echo 'Run the live OAuth and HTTP acceptance checks to verify upstream access.'
