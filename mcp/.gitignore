@@ -12,3 +12,6 @@ origin-auth.json
 *-tokens.json
 *.sqlite*
 __pycache__/
+update.lock
+deployment.json
+edge/wrangler.production.jsonc

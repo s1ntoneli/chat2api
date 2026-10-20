@@ -1,0 +1,24 @@
+#!/bin/bash
+# Keep runtime data outside Git and require a clean, fast-forward source update.
+set -euo pipefail
+cd -- "$(dirname -- "$(readlink -f -- "$0")")"
+exec 9>update.lock
+flock -n 9 || { echo 'Another deployment update is running.' >&2; exit 1; }
+if [ -n "$(git status --porcelain --untracked-files=normal)" ]; then
+    echo 'Source checkout has local changes; resolve them before updating.' >&2
+    exit 1
+fi
+if [ "$(git branch --show-current)" != main ]; then
+    echo 'Expected the main branch.' >&2
+    exit 1
+fi
+git pull --ff-only origin main
+revision=$(git rev-parse --short=12 HEAD)
+# Versioned image tags keep the preceding images available for rollback.
+export CHAT2API_IMAGE="local/chatgpt-backend:git-$revision"
+export MCP_IMAGE="local/chatgpt-mcp:git-$revision"
+docker compose build backend mcp
+docker compose run --rm --no-deps mcp python -m unittest discover -p 'test_*.py'
+docker compose up -d --wait --wait-timeout 120
+echo "Deployment updated to $revision."
+echo 'Run the live OAuth and HTTP acceptance checks to verify upstream access.'

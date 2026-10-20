@@ -110,6 +110,14 @@ supplying a JSON object with `username` and `password` through standard input.
 The helper hashes the password with Argon2id, updates the single configured
 account, restarts Authelia, and verifies the login without printing the password.
 
+## Repository updates
+
+Run `/opt/chatgpt-mcp/update` as root. It requires a clean `main` checkout,
+fast-forwards from this fork, builds versioned backend/MCP images, runs unit
+tests before replacing services, and waits for container health. Runtime state
+is ignored by Git and retained. Keep the preceding image tags for rollback.
+Run the live checks below after each update; health alone does not verify ChatGPT.
+
 ## Verification and maintenance
 
 ```sh

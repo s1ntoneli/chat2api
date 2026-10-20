@@ -4,7 +4,7 @@ services:
     build:
       context: ..
       dockerfile: mcp/backend.Dockerfile
-    image: local/chatgpt-backend:a63a90c-mcp1
+    image: ${CHAT2API_IMAGE:-local/chatgpt-backend:a63a90c-mcp1}
     restart: unless-stopped
     read_only: true
     environment:
@@ -31,7 +31,7 @@ services:
     networks: [chatgpt]
   mcp:
     build: ./server
-    image: local/chatgpt-mcp:2
+    image: ${MCP_IMAGE:-local/chatgpt-mcp:2}
     restart: unless-stopped
     read_only: true
     init: true
